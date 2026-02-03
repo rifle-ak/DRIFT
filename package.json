@@ -1,0 +1,27 @@
+{
+  "name": "drift",
+  "version": "1.0.0",
+  "description": "DRIFT — Discord Relay Into Forum Threads. Migrate text channels to forum posts preserving messages, attachments, and author attribution.",
+  "type": "module",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "drift",
+    "discord",
+    "migration",
+    "forum",
+    "channel",
+    "relay"
+  ],
+  "license": "MIT"
+}

@@ -52,7 +52,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// ── /migrate ──────────────────────────────────────────────────────────────────
+// ── /drift ───────────────────────────────────────────────────────────────────
 async function handleMigrate(interaction) {
   const sourceChannel = interaction.options.getChannel('channel');
   const forumChannel  = interaction.options.getChannel('forum');
@@ -89,7 +89,7 @@ async function handleMigrate(interaction) {
     '',
     archiveSource
       ? '🔒 Source channel has been locked with a redirect notice.'
-      : '💡 Source channel is still active. Use `/migrate` with `archive-source: true` to lock it.',
+      : '💡 Source channel is still active. Use `/drift` with `archive-source: true` to lock it.',
   ].filter(Boolean).join('\n');
 
   await safeEditReply(interaction, summary);
@@ -97,7 +97,7 @@ async function handleMigrate(interaction) {
   console.log(`[MIGRATE] ✅ #${sourceChannel.name} done — ${result.messageCount} msgs in ${result.duration}`);
 }
 
-// ── /migrate-category ─────────────────────────────────────────────────────────
+// ── /drift-category ──────────────────────────────────────────────────────────
 async function handleMigrateCategory(interaction) {
   const category       = interaction.options.getChannel('category');
   const forumChannel   = interaction.options.getChannel('forum');
@@ -241,7 +241,7 @@ async function handleMigrateCategory(interaction) {
   console.log(`[BULK] ✅ Complete — ${succeeded.length}/${results.length} channels migrated`);
 }
 
-// ── /migrate-preview ──────────────────────────────────────────────────────────
+// ── /drift-preview ───────────────────────────────────────────────────────────
 async function handlePreview(interaction) {
   const channel = interaction.options.getChannel('channel');
 
@@ -269,7 +269,7 @@ async function handlePreview(interaction) {
     '',
     `⏱️ Estimated migration time: **~${estimateTime(stats.totalMessages)}**`,
     '',
-    `Use \`/migrate\` to start the migration.`,
+    `Use \`/drift\` to start the migration.`,
   ].join('\n');
 
   await interaction.editReply(preview);

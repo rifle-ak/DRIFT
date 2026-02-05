@@ -26,10 +26,9 @@ const commands = [
         .setDescription('Target forum channel (ignored if existing-post is set)')
         .addChannelTypes(ChannelType.GuildForum)
         .setRequired(false))
-    .addChannelOption(opt =>
+    .addStringOption(opt =>
       opt.setName('existing-post')
-        .setDescription('Migrate into an existing forum post instead of creating a new one')
-        .addChannelTypes(ChannelType.PublicThread)
+        .setDescription('Thread ID of an existing forum post to migrate into (right-click post → Copy ID)')
         .setRequired(false))
     .addStringOption(opt =>
       opt.setName('post-name')
@@ -155,24 +154,35 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 // ── /drift ───────────────────────────────────────────────────────────────────
 async function handleMigrate(interaction) {
-  const sourceChannel  = interaction.options.getChannel('channel');
-  const forumChannel   = interaction.options.getChannel('forum');
-  const existingPost   = interaction.options.getChannel('existing-post');
-  const postName       = interaction.options.getString('post-name');
-  const tagName        = interaction.options.getString('tag');
-  const pinsOnly       = interaction.options.getBoolean('pins-only')      ?? false;
-  const archiveSource  = interaction.options.getBoolean('archive-source') ?? false;
+  const sourceChannel    = interaction.options.getChannel('channel');
+  const forumChannel     = interaction.options.getChannel('forum');
+  const existingPostId   = interaction.options.getString('existing-post');
+  const postName         = interaction.options.getString('post-name');
+  const tagName          = interaction.options.getString('tag');
+  const pinsOnly         = interaction.options.getBoolean('pins-only')      ?? false;
+  const archiveSource    = interaction.options.getBoolean('archive-source') ?? false;
 
   await interaction.deferReply({ ephemeral: true });
 
   // Validate: need either forum or existing-post
-  if (!forumChannel && !existingPost) {
-    return await interaction.editReply('❌ You must provide either a `forum` channel or an `existing-post` to migrate into.');
+  if (!forumChannel && !existingPostId) {
+    return await interaction.editReply('❌ You must provide either a `forum` channel or an `existing-post` ID to migrate into.');
   }
 
-  // If using existing post, verify it's a forum thread
-  if (existingPost && !existingPost.parent?.type === ChannelType.GuildForum) {
-    return await interaction.editReply('❌ The `existing-post` must be a forum post (thread in a forum channel).');
+  // If using existing post ID, fetch the thread
+  let existingPost = null;
+  if (existingPostId) {
+    try {
+      existingPost = await interaction.guild.channels.fetch(existingPostId);
+      if (!existingPost || !existingPost.isThread()) {
+        return await interaction.editReply('❌ Could not find a forum post with that ID. Make sure you copied the correct thread ID.');
+      }
+      if (existingPost.parent?.type !== ChannelType.GuildForum) {
+        return await interaction.editReply('❌ The `existing-post` must be a forum post (thread in a forum channel), not a regular thread.');
+      }
+    } catch (err) {
+      return await interaction.editReply(`❌ Failed to fetch thread: ${err.message}\n\nMake sure you have the correct thread ID (right-click the forum post → Copy ID).`);
+    }
   }
 
   const targetName = existingPost ? existingPost.name : forumChannel.name;

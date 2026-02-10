@@ -2,7 +2,7 @@
 //  DRIFT — Discord Relay Into Forum Threads
 //  deploy-commands.js — Slash command registration
 // ─────────────────────────────────────────────────────────────────────────────
-import { REST, Routes, SlashCommandBuilder, ChannelType, PermissionFlagsBits } from 'discord.js';
+import { REST, Routes, SlashCommandBuilder, ChannelType } from 'discord.js';
 import 'dotenv/config';
 
 const commands = [
@@ -36,7 +36,6 @@ const commands = [
       opt.setName('archive-source')
         .setDescription('Lock the source channel and add a redirect notice after migration (default: false)')
         .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 
   // ── Bulk category migration ───────────────────────────────────────────
@@ -65,7 +64,6 @@ const commands = [
       opt.setName('preview')
         .setDescription('Just list what would be migrated — no changes made (default: false)')
         .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 
   // ── Preview / dry-run for a single channel ────────────────────────────
@@ -77,7 +75,6 @@ const commands = [
         .setDescription('Channel to preview')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 ];
 

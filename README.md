@@ -76,6 +76,25 @@ CLIENT_ID=your-client-id
 GUILD_ID=your-server-id    # for instant command registration during testing
 ```
 
+### Staff Permissions
+
+By default only users with **Manage Server** permission can use DRIFT commands. To allow additional staff members, add their role or user IDs to `.env`:
+
+```
+# Allow anyone with these roles to use DRIFT (comma-separated role IDs)
+STAFF_ROLE_IDS=1234567890,9876543210
+
+# Allow these specific users to use DRIFT (comma-separated user IDs)
+STAFF_USER_IDS=1111111111
+```
+
+A user is authorised if **any** of these are true:
+- They have the Manage Server permission, **or**
+- They have a role listed in `STAFF_ROLE_IDS`, **or**
+- Their user ID is listed in `STAFF_USER_IDS`
+
+> **Tip:** Right-click a role or user in Discord and select **Copy ID** (requires Developer Mode enabled in Discord settings).
+
 ### 4. Install & Deploy Commands
 
 ```bash

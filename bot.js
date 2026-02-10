@@ -46,7 +46,6 @@ const commands = [
       opt.setName('archive-source')
         .setDescription('Lock the source channel and add a redirect notice after migration (default: false)')
         .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 
   new SlashCommandBuilder()
@@ -74,7 +73,6 @@ const commands = [
       opt.setName('preview')
         .setDescription('Just list what would be migrated — no changes made (default: false)')
         .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 
   new SlashCommandBuilder()
@@ -85,11 +83,30 @@ const commands = [
         .setDescription('Channel to preview')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 ];
 
 const BULK_DELAY = (parseInt(process.env.BULK_CHANNEL_DELAY, 10) || 30) * 1000;
+
+// ── Staff permission allowlists ─────────────────────────────────────────────
+const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+const STAFF_USER_IDS = (process.env.STAFF_USER_IDS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+/**
+ * Check whether a guild member is authorised to use DRIFT commands.
+ * Allowed if ANY of the following are true:
+ *   1. Member has the ManageGuild permission (existing behaviour)
+ *   2. Member has a role listed in STAFF_ROLE_IDS
+ *   3. Member's user ID is listed in STAFF_USER_IDS
+ */
+function hasPermission(member) {
+  if (member.permissions.has(PermissionFlagsBits.ManageGuild)) return true;
+  if (STAFF_USER_IDS.includes(member.id)) return true;
+  if (STAFF_ROLE_IDS.length > 0 && member.roles.cache.some(r => STAFF_ROLE_IDS.includes(r.id))) return true;
+  return false;
+}
 
 // ── Bot setup ─────────────────────────────────────────────────────────────────
 const client = new Client({
@@ -104,6 +121,8 @@ client.once(Events.ClientReady, async (c) => {
   console.log(`🌊 DRIFT online as ${c.user.tag}`);
   console.log(`   Guilds: ${c.guilds.cache.size}`);
   console.log(`   Rate limit delay: ${process.env.RATE_LIMIT_DELAY || 1500}ms`);
+  console.log(`   Staff roles: ${STAFF_ROLE_IDS.length > 0 ? STAFF_ROLE_IDS.join(', ') : '(none — ManageGuild only)'}`);
+  console.log(`   Staff users: ${STAFF_USER_IDS.length > 0 ? STAFF_USER_IDS.join(', ') : '(none — ManageGuild only)'}`);
 
   // Auto-register slash commands on startup
   try {
@@ -131,6 +150,14 @@ client.once(Events.ClientReady, async (c) => {
 // ── Command router ────────────────────────────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+
+  // ── Custom permission gate (replaces Discord's setDefaultMemberPermissions) ──
+  if (!hasPermission(interaction.member)) {
+    return await interaction.reply({
+      content: '❌ You don\'t have permission to use DRIFT commands.',
+      ephemeral: true,
+    });
+  }
 
   try {
     switch (interaction.commandName) {
